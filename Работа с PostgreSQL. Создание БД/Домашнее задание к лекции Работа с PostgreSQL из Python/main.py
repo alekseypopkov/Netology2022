@@ -47,13 +47,15 @@ def find_client(conn, first_name=None, last_name=None, email=None, phone=None):
 
 with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869") as conn:
     while True:
-        print(f'\nВведите c - чтобы создать структуру БД (таблицы) '
-            f'\nвведите s - чтобы узнать номер полки документа '
-            f'\nвведите l - чтобы вывести список всех документов '
-            f'\nвведите a - чтобы добавить новый документ '
+        print(f'\nВведите cr - чтобы создать структуру БД (таблицы) '
+            f'\nвведите ad - чтобы добавить нового клиента '
+            f'\nвведите t - чтобы добавить телефон для существующего клиента '
+            f'\nвведите a - чтобы изменить данные о клиенте '
+            f'\nвведите a - удалить телефон для существующего клиента '  
+            f'\nвведите a - удалить существующего клиента ' 
             f'\n* - завершить работу')
         letter = input('Введите название команды: ')
-        if letter == 'c':
+        if letter == 'cr':
             print(f'\nВнимание создание структуры БД приведет к уничтожению всех ранее введенных данных'
                 f'\nвведите p - чтобы продолжить'
                 f'\n* - вернуться в главное меню')
@@ -62,10 +64,9 @@ with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869
                 create_db(conn)
             elif answer == '*':
                 continue
-
-        #     name_people()
-        # elif letter == 's':
-        #     search_shelf()
+            name_people()
+        elif letter == 'ad':
+            add_client()
         # elif letter == 'l':
         #     list_doc()
         # elif letter == 'a':
