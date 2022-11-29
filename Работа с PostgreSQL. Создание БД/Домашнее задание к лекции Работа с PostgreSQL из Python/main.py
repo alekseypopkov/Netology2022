@@ -61,7 +61,7 @@ with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869
             if answer == 'p':
                 create_db(conn)
             elif answer == '*':
-                main()
+                continue
 
         #     name_people()
         # elif letter == 's':
