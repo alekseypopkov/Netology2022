@@ -7,6 +7,7 @@ class NewClient:
         self.last_name = last_name
         self.email = email
         self.phone = phone
+
     def check_info(self):
         print(self.name, self.last_name, self.email, self.phone)
 
@@ -30,14 +31,12 @@ def create_db(conn):
             CREATE TABLE IF NOT EXISTS telephone(
                 id SERIAL PRIMARY KEY,
                 contacts_id INTEGER,
-                tel_number INTEGER
+                tel_number VARCHAR(12)
                 );
     """)
     conn.commit()  # фиксируем в БД
     return '\n Создание структуры БД (Таблиц) создано.\n Приступайте к наполнению БД.'
 
-# def add_client(conn, first_name, last_name, email, phones=None):
-#     pass
 def add_client(conn, client):
     cur = conn.cursor()
     cur.execute("""
@@ -45,24 +44,20 @@ def add_client(conn, client):
     VALUES (%s, %s, %s);
     """, (client.name, client.last_name, client.email))
     conn.commit()  # фиксируем в БД
+
     cur.execute("""
     SELECT id FROM contacts
-    WHERE email= %s;
-    """, (client.email))
+    WHERE email = %s;
+    """, (client.email,))
     client_id = cur.fetchone()
-    # if client.phone:
-    #     cur.execute("""
-    #     SELECT id FROM contacts
-    #     WHERE name LIKE '%%s%' AND last_name LIKE '%%s%' AND email LIKE '%%s%';
-    #     """, (client.name, client.last_name, client.email))
-    #     client_id = cur.fetchone()
-    #     cur.execute("""
-    #         INSERT INTO telephone(contacts_id, tel_number)
-    #         VALUES (%s, %s, %s);
-    #         """, (client_id, client.phone))
+    if client.phone:
+        cur.execute("""
+            INSERT INTO telephone(contacts_id, tel_number)
+            VALUES (%s, %s);
+            """, (client_id, client.phone))
     conn.commit()  # фиксируем в БД
 
-    return '\n Запись внесена БД.', client_id
+    return '\n Запись внесена БД.'
 
 
 
