@@ -57,7 +57,7 @@ def add_client(conn, client):
             """, (client_id, client.phone))
     conn.commit()  # фиксируем в БД
 
-    return '\n Запись внесена БД.'
+    return f'\n Запись "{NewClient.check_info()}" внесена БД.'
 
 
 
