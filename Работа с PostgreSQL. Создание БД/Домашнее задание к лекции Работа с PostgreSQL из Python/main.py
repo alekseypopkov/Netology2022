@@ -57,7 +57,7 @@ def add_client(conn, client):
             """, (client_id, client.phone))
     conn.commit()  # фиксируем в БД
 
-    return f'\n Запись "{NewClient.check_info()}" внесена БД.'
+    return f'\n Запись внесена БД.'
 
 
 
@@ -99,7 +99,7 @@ with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869
         elif letter == 'ad':
             print('\nВнесите сведения о новом клиенте:')
             new_client = NewClient(input('Имя: '), input('Фамилия: '), input('email: '), input('Телефон: '))
-            new_client.check_info()
+            #new_client.check_info()
             print(add_client(conn, new_client))
 
         # elif letter == 'l':
