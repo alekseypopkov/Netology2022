@@ -1,6 +1,16 @@
 import psycopg2
 import sys
 
+class NewClient:
+    def __init__(self, name, last_name, email, phone=None):
+        self.name = name
+        self.last_name = last_name
+        self.email = email
+        self.phone = phone
+    def check_info(self):
+        print(self.name, self.last_name, self.email, self.phone)
+
+
 def create_db(conn):
     cur = conn.cursor()
     cur.execute("""
@@ -11,23 +21,50 @@ def create_db(conn):
     cur.execute("""
             CREATE TABLE IF NOT EXISTS contacts(
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(35) UNIQUE,
-                last_name VARCHAR(35) UNIQUE,
+                name VARCHAR(35),
+                last_name VARCHAR(35),
                 email VARCHAR(255) UNIQUE
                 );
         """)
     cur.execute("""
             CREATE TABLE IF NOT EXISTS telephone(
                 id SERIAL PRIMARY KEY,
-                contactc_id INTEGER,
+                contacts_id INTEGER,
                 tel_number INTEGER
                 );
     """)
     conn.commit()  # фиксируем в БД
-    return print('\n Создание структуры БД (Таблиц) создано.\n Приступайте к наполнению БД.')
+    return '\n Создание структуры БД (Таблиц) создано.\n Приступайте к наполнению БД.'
 
-def add_client(conn, first_name, last_name, email, phones=None):
-    pass
+# def add_client(conn, first_name, last_name, email, phones=None):
+#     pass
+def add_client(conn, client):
+    cur = conn.cursor()
+    cur.execute("""
+    INSERT INTO contacts(name, last_name, email)
+    VALUES (%s, %s, %s);
+    """, (client.name, client.last_name, client.email))
+    conn.commit()  # фиксируем в БД
+    cur.execute("""
+    SELECT id FROM contacts
+    WHERE email= %s;
+    """, (client.email))
+    client_id = cur.fetchone()
+    # if client.phone:
+    #     cur.execute("""
+    #     SELECT id FROM contacts
+    #     WHERE name LIKE '%%s%' AND last_name LIKE '%%s%' AND email LIKE '%%s%';
+    #     """, (client.name, client.last_name, client.email))
+    #     client_id = cur.fetchone()
+    #     cur.execute("""
+    #         INSERT INTO telephone(contacts_id, tel_number)
+    #         VALUES (%s, %s, %s);
+    #         """, (client_id, client.phone))
+    conn.commit()  # фиксируем в БД
+
+    return '\n Запись внесена БД.', client_id
+
+
 
 def add_phone(conn, client_id, phone):
     pass
@@ -64,9 +101,12 @@ with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869
                 create_db(conn)
             elif answer == '*':
                 continue
-            name_people()
         elif letter == 'ad':
-            add_client()
+            print('\nВнесите сведения о новом клиенте:')
+            new_client = NewClient(input('Имя: '), input('Фамилия: '), input('email: '), input('Телефон: '))
+            new_client.check_info()
+            print(add_client(conn, new_client))
+
         # elif letter == 'l':
         #     list_doc()
         # elif letter == 'a':
