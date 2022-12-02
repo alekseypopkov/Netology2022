@@ -1,6 +1,7 @@
 import psycopg2
 import sys
-import pprint
+from pprint import pprint
+
 
 def create_db(conn):
     cur = conn.cursor()
@@ -40,30 +41,34 @@ class NewClient:
 
     def add_client(self, conn,):
         cur = conn.cursor()
-        cur.execute("""
-        INSERT INTO contacts(first_name, last_name, email)
-        VALUES (%s, %s, %s);
-        """, (self.first_name, self.last_name, self.email))
-        conn.commit()  # фиксируем в БД
-
-        cur.execute("""
-        SELECT id FROM contacts
-        WHERE email = %s;
-        """, (self.email,))
-        client_id = cur.fetchone()
-        if self.phone:
+        try:
             cur.execute("""
-                INSERT INTO telephone(contacts_id, tel_number)
-                VALUES (%s, %s);
-                """, (client_id, self.phone))
-        else:
-            cur.execute("""
-                INSERT INTO telephone(contacts_id, tel_number)
-                VALUES (%s, %s);
-                """, (client_id, self.phone == '0'))
-        conn.commit()  # фиксируем в БД
+            INSERT INTO contacts(first_name, last_name, email)
+            VALUES (%s, %s, %s);
+            """, (self.first_name, self.last_name, self.email))
+            conn.commit()  # фиксируем в БД
 
-        return print(f'\nзапись "{" ".join(self.client_info)}" внесена в БД')
+            cur.execute("""
+            SELECT id FROM contacts
+            WHERE email = %s;
+            """, (self.email,))
+            client_id = cur.fetchone()
+            if self.phone:
+                cur.execute("""
+                    INSERT INTO telephone(contacts_id, tel_number)
+                    VALUES (%s, %s);
+                    """, (client_id, self.phone))
+            else:
+                cur.execute("""
+                    INSERT INTO telephone(contacts_id, tel_number)
+                    VALUES (%s, %s);
+                    """, (client_id, self.phone == '0'))
+            conn.commit()  # фиксируем в БД
+            return print(f'\nзапись "{" ".join(self.client_info)}" внесена в БД')
+        except:
+            print('\nУточните почту клиента. Данная почта уже есть в БД')
+
+
 
 class Client:
 
@@ -77,18 +82,16 @@ class Client:
     def find_client(self, conn):
         cur = conn.cursor()
         cur.execute("""
-        SELECT * FROM contacts a
+        SELECT a.first_name, a.last_name, a.email  FROM contacts a
         JOIN telephone t ON a.id = t.contacts_id
         WHERE a.first_name LIKE %s OR a.last_name LIKE %s OR a.email = %s OR t.tel_number = %s;
         """, (self.first_name, self.last_name, self.email, self.phone))
         select_client = cur.fetchall()
-        try:
-            print(f'\n{select_client}')
-        except:
-            print('Ой, что-то пошло не так! Проверьте исходные данные.')
-
-        conn.commit()  # фиксируем в БД
-        return
+        if len(select_client) == 0:
+            return print('\nПо данным нет совпадений в БД.'
+                  '\nУточните данные клиента.')
+        elif len(select_client) > 1:
+            return print(f'Выборка не однозначна, уточните данные клиента\n{select_client}')
 
     def add_phone(self, conn, client_id, phone):
         pass
