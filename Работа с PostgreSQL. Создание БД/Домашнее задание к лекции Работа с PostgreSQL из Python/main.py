@@ -1,6 +1,6 @@
 import psycopg2
 import sys
-
+import pprint
 
 def create_db(conn):
     cur = conn.cursor()
@@ -12,7 +12,7 @@ def create_db(conn):
     cur.execute("""
             CREATE TABLE IF NOT EXISTS contacts(
                 id SERIAL PRIMARY KEY,
-                name VARCHAR(35),
+                first_name VARCHAR(35),
                 last_name VARCHAR(35),
                 email VARCHAR(255) UNIQUE
                 );
@@ -27,23 +27,23 @@ def create_db(conn):
     conn.commit()  # фиксируем в БД
     return '\n Создание структуры БД (Таблиц) создано.\n Приступайте к наполнению БД.'
 
-class Client:
-    def __init__(self, name, last_name, email, phone=None):
-        self.name = name
+class NewClient:
+    def __init__(self, first_name, last_name, email, phone=None):
+        self.first_name = first_name
         self.last_name = last_name
         self.email = email
         self.phone = phone
-        self.client_info = self.name, self.last_name, self.email, self.phone
+        self.client_info = self.first_name, self.last_name, self.email, self.phone
 
-    def check_info(self):
-        print(self.name, self.last_name, self.email, self.phone)
+    # def check_info(self):
+    #     print(self.first_name, self.last_name, self.email, self.phone)
 
     def add_client(self, conn,):
         cur = conn.cursor()
         cur.execute("""
-        INSERT INTO contacts(name, last_name, email)
+        INSERT INTO contacts(first_name, last_name, email)
         VALUES (%s, %s, %s);
-        """, (self.name, self.last_name, self.email))
+        """, (self.first_name, self.last_name, self.email))
         conn.commit()  # фиксируем в БД
 
         cur.execute("""
@@ -56,14 +56,43 @@ class Client:
                 INSERT INTO telephone(contacts_id, tel_number)
                 VALUES (%s, %s);
                 """, (client_id, self.phone))
+        else:
+            cur.execute("""
+                INSERT INTO telephone(contacts_id, tel_number)
+                VALUES (%s, %s);
+                """, (client_id, self.phone == '0'))
         conn.commit()  # фиксируем в БД
 
         return print(f'\nзапись "{" ".join(self.client_info)}" внесена в БД')
 
+class Client:
 
+    def __init__(self, first_name=None, last_name=None, email=None, phone=None):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email = email
+        self.phone = phone
+        self.client_info = self.first_name, self.last_name, self.email, self.phone
 
-def add_phone(conn, client_id, phone):
-    pass
+    def find_client(self, conn):
+        cur = conn.cursor()
+        cur.execute("""
+        SELECT * FROM contacts a
+        JOIN telephone t ON a.id = t.contacts_id
+        WHERE a.first_name LIKE %s OR a.last_name LIKE %s OR a.email = %s OR t.tel_number = %s;
+        """, (self.first_name, self.last_name, self.email, self.phone))
+        select_client = cur.fetchall()
+        try:
+            print(f'\n{select_client}')
+        except:
+            print('Ой, что-то пошло не так! Проверьте исходные данные.')
+
+        conn.commit()  # фиксируем в БД
+        return
+
+    def add_phone(self, conn, client_id, phone):
+        pass
+
 
 def change_client(conn, client_id, first_name=None, last_name=None, email=None, phones=None):
     pass
@@ -75,7 +104,11 @@ def delete_client(conn, client_id):
     pass
 
 def find_client(conn, first_name=None, last_name=None, email=None, phone=None):
-    pass
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT * FROM contacts
+    """)
+    conn.commit()  # фиксируем в БД
 
 
 with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869") as conn:
@@ -99,10 +132,13 @@ with psycopg2.connect(database="clients_db", user="postgres", password="Alex1869
                 continue
         elif letter == 'ad':
             print('\nВнесите сведения о новом клиенте:')
-            new_client = Client(input('Имя: '), input('Фамилия: '), input('email: '), input('Телефон: '))
+            new_client = NewClient(input('Имя: '), input('Фамилия: '), input('email: '), input('Телефон: '))
             new_client.add_client(conn)
         elif letter == 'adt':
-            print('\nВнесите сведения о клиенте и номер телефона:')
+            print('\nВнесите сведения о клиенте и номер телефона:'
+                  '\n-Выберем клиента')
+            client = Client(input('Имя: '), input('Фамилия: '), input('email: '), input('Телефон: '))
+            client.find_client(conn)
         #     list_doc()
         # elif letter == 'a':
         #     add_doc()
